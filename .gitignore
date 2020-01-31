@@ -4,6 +4,7 @@
 .cargo
 .config
 .mal-history
+.mal_history
 .crystal
 .lein
 .m2
@@ -18,4 +19,4 @@ node_modules
 
 logs
 old
-
+tmp/

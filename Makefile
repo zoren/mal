@@ -290,7 +290,7 @@ STEP_TEST_FILES = $(strip $(wildcard \
 			$(filter-out $(if $(filter $(1),$(step5_EXCLUDES)),step5,),\
 			  $(regress_$(2)))\
 			,$(2)),\
-		      $(1)/tests/$($(s))$(EXTENSION) tests/$($(s))$(EXTENSION))))
+		      impls/$(1)/tests/$($(s))$(EXTENSION) impls/tests/$($(s))$(EXTENSION))))
 
 # DOCKERIZE utility functions
 lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
@@ -341,7 +341,7 @@ get_runtest_cmd = $(call get_run_prefix,$(1),$(2),$(if $(filter cs fsharp mal tc
 
 # Takes impl and step
 # Returns the runtest command prefix (with runtest options) for testing the given step
-get_argvtest_cmd = $(call get_run_prefix,$(1),$(2)) ../../run_argv_test.sh
+get_argvtest_cmd = $(call get_run_prefix,$(1),$(2)) ../tests/run_argv_test.sh
 
 # Derived lists
 STEPS = $(sort $(filter-out %_EXCLUDES,$(filter step%,$(.VARIABLES))))
@@ -405,8 +405,9 @@ $(foreach i,$(DO_IMPLS),$(foreach s,$(STEPS),build^$(i)^$(s))): $$(call $$(word 
 $(ALL_TESTS): $$(call $$(word 2,$$(subst ^, ,$$(@)))_STEP_TO_PROG,$$(word 3,$$(subst ^, ,$$(@))))
 	@$(foreach impl,$(word 2,$(subst ^, ,$(@))),\
 	  $(foreach step,$(word 3,$(subst ^, ,$(@))),\
+	    echo "(call STEP_TEST_FILES,$(impl),$(step)): $(call STEP_TEST_FILES,$(impl),$(step))" && \
 	    cd impls/$(call actual_impl,$(impl)) && \
-	    $(foreach test,$(call STEP_TEST_FILES,$(impl),$(step)),\
+	    $(foreach test,$(patsubst impls/%,%,$(call STEP_TEST_FILES,$(impl),$(step))),\
 	      echo '----------------------------------------------' && \
 	      echo 'Testing $@; step file: $+, test file: $(test)' && \
 	      echo 'Running: $(call get_runtest_cmd,$(impl),$(step)) ../$(test) -- ../$(impl)/run' && \
