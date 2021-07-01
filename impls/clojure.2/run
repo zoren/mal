@@ -1,2 +1,2 @@
 #!/bin/bash
-exec clojure -M $(dirname $0)/${STEP:-stepA_mal}.clj "${@}"
+exec clojure -M $(dirname $0)/src/mal/${STEP:-stepA_mal}.clj "${@}"
