@@ -1,4 +1,5 @@
-(ns mal.printer)
+(ns mal.printer
+  (:require [clojure.string :as str]))
 
 (def escape-mapping
   {\" \"
@@ -26,18 +27,18 @@
     (list? ds)
     (str \( (->> ds
                  (map pr-str)
-                 (clojure.string/join " ")) \))
+                 (str/join " ")) \))
 
     (vector? ds)
     (str \[ (->> ds
                  (map pr-str)
-                 (clojure.string/join " ")) \])
+                 (str/join " ")) \])
 
     (map? ds)
     (str \{ (->> ds
                  (mapcat identity)
                  (map pr-str)
-                 (clojure.string/join " ")) \})
+                 (str/join " ")) \})
 
     (string? ds)
     (str \" (escape ds) \")
