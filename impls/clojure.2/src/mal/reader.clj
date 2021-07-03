@@ -99,6 +99,9 @@
         (let [raw-string (subs current 1 (dec (count current)))]
           (unescape raw-string)))
 
+      \:
+      (-> current (subs 1) keyword)
+
       (read-atom current))))
 
 (defn read-list! [reader-object]

@@ -40,7 +40,10 @@
                  (clojure.string/join " ")) \})
 
     (string? ds)
-    (str \" (escape ds) \")))
+    (str \" (escape ds) \")
+    
+    (keyword? ds)
+    (str ds)))
 
 (comment
   (pr-str '(= 2 3))
