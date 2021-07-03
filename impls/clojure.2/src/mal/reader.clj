@@ -2,12 +2,8 @@
   (:require
    [clojure.string]))
 
-(def token-regex-str (-> "token_regex.txt"
-                         slurp
-                         clojure.string/trimr))
-
-
-(def token-regex (re-pattern token-regex-str))
+(def token-regex 
+  #"[\s,]*(~@|[\[\]{}()'`~^@]|\"(?:\\.|[^\\\"])*\"?|;.*|[^\s\[\]{}('\"`,;)]*)")
 
 (defn tokenize [s]
   (->> s
