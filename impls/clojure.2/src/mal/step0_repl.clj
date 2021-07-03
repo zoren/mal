@@ -6,7 +6,12 @@
 
 (defn PRINT [s] s)
 
-(def rep (comp PRINT EVAL PRINT))
+(defn rep [input]
+  (->
+   input
+   READ
+   EVAL
+   PRINT))
 
 (loop []
   (print "user> ")
