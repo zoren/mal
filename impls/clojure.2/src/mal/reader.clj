@@ -11,16 +11,20 @@
        (map second)
        butlast))
 
-(defn read-atom [s]
-  (cond
-    (Character/isDigit (first s))
+(defn try-parse-long [s]
+  (try
     (Long/parseLong s)
+    (catch NumberFormatException _nfe
+      nil)))
 
-    :else
+(defn read-atom [s]
+  (if-let [integer (try-parse-long s)]
+    integer
     (symbol s)))
 
 (comment
   (read-atom "123")
+  (read-atom "-123")
   (read-atom "abc"))
 
 (defn make-reader-object [tokens]
