@@ -18,6 +18,15 @@
 
 (defn pr-str [ds]
   (cond
+    (nil? ds)
+    "nil"
+
+    (= ds false)
+    "false"
+
+    (= ds true)
+    "true"
+
     (symbol? ds)
     (str ds)
 
@@ -42,7 +51,7 @@
 
     (string? ds)
     (str \" (escape ds) \")
-    
+
     (keyword? ds)
     (str ds)))
 

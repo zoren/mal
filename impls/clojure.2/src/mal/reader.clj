@@ -20,9 +20,17 @@
 (defn read-atom [s]
   (if-let [integer (try-parse-long s)]
     integer
-    (symbol s)))
+    (case s
+     "nil" nil
+     "false" false
+      "true" true
+
+     (symbol s))))
 
 (comment
+  (read-atom "nil")
+  (read-atom "false")
+  (read-atom "true")
   (read-atom "123")
   (read-atom "-123")
   (read-atom "abc"))
