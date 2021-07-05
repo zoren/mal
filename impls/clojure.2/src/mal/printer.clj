@@ -17,50 +17,57 @@
 (comment
   (escape "abc\ndef"))
 
-(defn pr-str [ds]
-  (cond
-    (nil? ds)
-    "nil"
+(defn pr-str 
+  ([outer-ds] (pr-str outer-ds true))
+  ([outer-ds print-readably]
+  ((fn go [ds]
+     (cond
+       (nil? ds)
+       "nil"
 
-    (= ds false)
-    "false"
+       (= ds false)
+       "false"
 
-    (= ds true)
-    "true"
+       (= ds true)
+       "true"
 
-    (symbol? ds)
-    (str ds)
+       (symbol? ds)
+       (str ds)
 
-    (number? ds)
-    (str ds)
+       (number? ds)
+       (str ds)
 
-    (list? ds)
-    (str \( (->> ds
-                 (map pr-str)
-                 (str/join " ")) \))
+       (list? ds)
+       (str \( (->> ds
+                    (map go)
+                    (str/join " ")) \))
 
-    (vector? ds)
-    (str \[ (->> ds
-                 (map pr-str)
-                 (str/join " ")) \])
+       (vector? ds)
+       (str \[ (->> ds
+                    (map go)
+                    (str/join " ")) \])
 
-    (map? ds)
-    (str \{ (->> ds
-                 (mapcat identity)
-                 (map pr-str)
-                 (str/join " ")) \})
+       (map? ds)
+       (str \{ (->> ds
+                    (mapcat identity)
+                    (map go)
+                    (str/join " ")) \})
 
-    (string? ds)
-    (str \" (escape ds) \")
+       (string? ds)
+       (if print-readably
+         (str \" (escape ds) \")
+         ds)
 
-    (keyword? ds)
-    (str ds)
-    
-    (fn? ds)
-    "#<function>"))
+       (keyword? ds)
+       (str ds)
+
+       (fn? ds)
+       "#<function>")) outer-ds)))
 
 (comment
   (pr-str '(= 2 3))
+  (pr-str "abc" true)
+  (pr-str "abc" false)
 
   (pr-str '[2 4])
   (pr-str '{"a" 2 "c" 3})

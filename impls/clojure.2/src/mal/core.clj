@@ -1,6 +1,7 @@
 (ns mal.core
   (:refer-clojure :exclude [ns])
   (:require
+   [clojure.string]
    [mal.printer]))
 
 (def ns
@@ -8,7 +9,6 @@
    '- (fn [x y] (- x y))
    '* (fn [x y] (* x y))
    '/ (fn [x y] (quot x y))
-   'prn (fn [form] (println (mal.printer/pr-str form)) nil)
    'list list
    'list? list?
    'empty? empty?
@@ -17,4 +17,8 @@
    '< <
    '<= <=
    '> >
-   '>= >=})
+   '>= >=
+   'pr-str (fn [& params] (clojure.string/join " " (map mal.printer/pr-str params)))
+   'str (fn [& params] (apply str (map #(mal.printer/pr-str % false) params)))
+   'prn (fn [& params] (println (clojure.string/join " " (map mal.printer/pr-str params))) nil)
+   'println (fn [& params] (println (clojure.string/join " " (map #(mal.printer/pr-str % false) params))) nil)})
