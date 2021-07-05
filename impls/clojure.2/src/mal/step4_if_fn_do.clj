@@ -84,6 +84,8 @@
 (doseq [[s f] mal.core/ns]
   (mal.env/set-symbol s f repl-env))
 
+(rep "(def! not (fn* (a) (if a false true)))" repl-env)
+
 (loop []
   (print "user> ")
   (flush)
