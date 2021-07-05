@@ -2,7 +2,8 @@
   (:require
    [mal.printer]
    [mal.reader]
-   [mal.env]))
+   [mal.env]
+   [mal.core]))
 
 (defn READ [s]
   (mal.reader/read-form s))
@@ -56,6 +57,12 @@
             (if (EVAL condition env)
               (EVAL true-form env)
               (EVAL false-form env)))
+          
+          (= first-form 'fn*)
+          (let [[params body] forms]
+            (fn [& args]
+              (let [new-env (mal.env/make-env env params args)]
+               (EVAL body new-env))))
 
           :else
           (apply (EVAL first-form env) (for [form forms] (EVAL form env))))))
@@ -71,26 +78,10 @@
    (EVAL env)
    PRINT))
 
-(def start-env
-  {'+ (fn [x y] (+ x y))
-   '- (fn [x y] (- x y))
-   '* (fn [x y] (* x y))
-   '/ (fn [x y] (quot x y))
-   'prn (fn [form] (println (pr-str form)) nil)
-   'list list
-   'list? list?
-   'empty? empty?
-   'count count
-   '= =
-   '< <
-   '<= <=
-   '> >
-   '>= >=})
-
 (def repl-env
   (mal.env/make-env))
 
-(doseq [[s f] start-env]
+(doseq [[s f] mal.core/ns]
   (mal.env/set-symbol s f repl-env))
 
 (loop []

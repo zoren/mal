@@ -1,10 +1,13 @@
 (ns mal.env)
 
 (defn make-env 
-  ([] (make-env nil))
-  ([outer]
-  {:outer outer
-   :data (atom {})}))
+  ([] (make-env nil {}))
+  ([outer] (make-env outer {}))
+  ([outer initial-bindings]
+   {:outer outer
+    :data (atom initial-bindings)})
+  ([outer binds values]
+  (make-env outer (into {} (map vector binds values)))))
 
 (defn set-symbol [k v {data :data}]
   (swap! data assoc k v)
@@ -19,4 +22,4 @@
 (defn get-symbol [k env]
   (if-let [{data :data} (find-symbol k env)]
     (@data k)
-    (throw (ex-info (str k " not found") {:k k}))))
+    (throw (ex-info (str \" k \" " not found") {:k k}))))

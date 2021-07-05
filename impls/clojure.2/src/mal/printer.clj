@@ -1,4 +1,5 @@
 (ns mal.printer
+  (:refer-clojure :exclude [pr-str])
   (:require [clojure.string :as str]))
 
 (def escape-mapping
@@ -53,7 +54,10 @@
     (str \" (escape ds) \")
 
     (keyword? ds)
-    (str ds)))
+    (str ds)
+    
+    (fn? ds)
+    "#<function>"))
 
 (comment
   (pr-str '(= 2 3))

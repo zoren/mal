@@ -1,4 +1,5 @@
 (ns mal.reader
+  (:refer-clojure :exclude [peek])
   (:require
    [clojure.string]))
 
