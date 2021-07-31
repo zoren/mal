@@ -47,10 +47,8 @@
             (EVAL body new-env))
 
           (= first-form 'do)
-          (do
-            (doseq [form (butlast forms)]
-              (EVAL form env))
-            (EVAL (last forms) env))
+          (let [el (eval-ast forms env)]
+            (last el))
 
           (= first-form 'if)
           (let [[condition true-form false-form] forms]
