@@ -17,6 +17,8 @@
 (comment
   (escape "abc\ndef"))
 
+(defrecord Closure [ast params env])
+
 (defn pr-str 
   ([outer-ds] (pr-str outer-ds true))
   ([outer-ds print-readably]
@@ -46,6 +48,9 @@
        (str \[ (->> ds
                     (map go)
                     (str/join " ")) \])
+
+       (instance? Closure ds)
+       "#<function>"
 
        (map? ds)
        (str \{ (->> ds
