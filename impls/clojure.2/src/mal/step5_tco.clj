@@ -47,8 +47,9 @@
             (recur body new-env))
 
           (= first-form 'do)
-          (let [el (eval-ast (butlast forms) env)]
-            (recur (last el) env))
+          (do
+            (doseq [f (butlast forms)] (EVAL f env))
+            (recur (last forms) env))
 
           (= first-form 'if)
           (let [[condition true-form false-form] forms]
