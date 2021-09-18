@@ -1,6 +1,6 @@
 (ns mal.step4-if-fn-do
   (:require
-   [mal.printer]
+   [mal.printer ]
    [mal.reader]
    [mal.env]
    [mal.core]))
@@ -26,10 +26,6 @@
 
     :else
     ast))
-
-(defn mal-apply [f a]
-  (if (fn? f)
-    (f a)))
 
 (defn EVAL [ast env]
   (if (list? ast)
