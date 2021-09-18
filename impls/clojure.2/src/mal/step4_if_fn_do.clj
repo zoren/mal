@@ -55,15 +55,23 @@
             (if (EVAL condition env)
               (EVAL true-form env)
               (EVAL false-form env)))
-          
+
           (= first-form 'fn*)
           (let [[params body] forms]
-            (fn [& args]
-              (let [new-env (mal.env/make-env env params args)]
-               (EVAL body new-env))))
+            (mal.printer/map->Closure
+             {:ast body
+              :params params
+              :env env}))
 
           :else
-          (apply (EVAL first-form env) (for [form forms] (EVAL form env))))))
+          (let [f (EVAL first-form env)
+                args (for [form forms] (EVAL form env))]
+            (if (fn? f)
+              (apply f args)
+
+              (let [{:keys [ast params env]} f
+                    new-env (mal.env/make-env env params args)]
+                (recur ast new-env)))))))
     (eval-ast ast env)))
 
 (defn PRINT [s]
