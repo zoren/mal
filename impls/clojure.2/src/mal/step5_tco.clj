@@ -1,6 +1,6 @@
 (ns mal.step4-if-fn-do
   (:require
-   [mal.printer ]
+   [mal.printer]
    [mal.reader]
    [mal.env]
    [mal.core]))
