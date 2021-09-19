@@ -10,7 +10,10 @@
   (->> s
        (re-seq token-regex)
        (map second)
-       butlast))
+       butlast
+       (filter #(seq %))
+       (filter #(not= \; (first %)))
+       ))
 
 (defn try-parse-long [s]
   (try
