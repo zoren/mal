@@ -118,6 +118,9 @@
       \:
       (-> current (subs 1) keyword)
 
+      \@
+      (list 'deref (read-form! reader-object))
+
       (read-atom current))))
 
 (defn read-list! [reader-object]
