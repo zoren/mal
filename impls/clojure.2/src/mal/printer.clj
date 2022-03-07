@@ -67,7 +67,14 @@
        (str ds)
 
        (fn? ds)
-       "#<function>")) outer-ds)))
+       "#<function>"
+
+       (instance? clojure.lang.Atom ds)
+       (do
+         (str "(atom " (go @ds) \)))
+
+       :else
+       (throw (ex-info "pr-str: unknown data" {:pr-str pr-str})))) outer-ds)))
 
 (comment
   (pr-str '(= 2 3))
