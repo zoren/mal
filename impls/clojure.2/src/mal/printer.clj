@@ -66,9 +66,6 @@
        (keyword? ds)
        (str ds)
 
-       (fn? ds)
-       "#<function>"
-
        (instance? clojure.lang.Atom ds)
        (do
          (str "(atom " (go @ds) \)))
