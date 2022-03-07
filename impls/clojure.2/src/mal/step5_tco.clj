@@ -61,8 +61,8 @@
           (let [[params body] forms]
             (mal.printer/map->Closure
              {:ast body
-             :params params
-             :env env}))
+              :params params
+              :env env}))
 
           :else
           (let [f (EVAL first-form env)
