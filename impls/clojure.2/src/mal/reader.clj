@@ -14,21 +14,12 @@
        (filter #(seq %))
        (filter #(not= \; (first %)))))
 
-(defn try-parse-long [s]
-  (try
-    (Long/parseLong s)
-    (catch NumberFormatException _nfe
-      nil)))
+(defn parse-nil-or-symbol [s]
+  (when-not (= s "nil")
+    (symbol s)))
 
 (defn read-atom [s]
-  (if-let [integer (try-parse-long s)]
-    integer
-    (case s
-      "nil" nil
-      "false" false
-      "true" true
-
-      (symbol s))))
+  (or (parse-long s) (parse-boolean s) (parse-nil-or-symbol s)))
 
 (comment
   (read-atom "nil")
