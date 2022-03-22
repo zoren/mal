@@ -67,8 +67,7 @@
        (str ds)
 
        (instance? clojure.lang.Atom ds)
-       (do
-         (str "(atom " (go @ds) \)))
+       (str "(atom " (go @ds) \))
 
        :else
        (throw (ex-info "pr-str: unknown data" {:pr-str pr-str})))) outer-ds)))
