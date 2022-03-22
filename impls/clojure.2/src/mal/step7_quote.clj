@@ -113,7 +113,6 @@
           :else
           (let [f (EVAL first-form env)
                 args (for [form forms] (EVAL form env))]
-            (def *DEBUG ast)
             (if (fn? f)
               (apply f args)
               (let [{:keys [ast params env]} f
@@ -159,12 +158,10 @@
     (try
       (println (rep line repl-env))
       (catch Exception e
-        (def *e e)
         (println (str "error:" (ex-message e)))))
     (recur)))
 
 (comment
-  *e
   (let [e (mal.env/make-env)]
     (doseq [[s f] (merge mal.core/ns mal-ns)]
       (mal.env/set-symbol s f e))
