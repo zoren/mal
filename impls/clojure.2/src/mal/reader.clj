@@ -121,6 +121,17 @@
       \@
       (list 'deref (read-form! reader-object))
 
+      \'
+      (list 'quote (read-form! reader-object))
+
+      \`
+      (list 'quasiquote (read-form! reader-object))
+
+      \~
+      (if (= current "~@")
+        (list 'splice-unquote (read-form! reader-object))
+        (list 'unquote (read-form! reader-object)))
+
       (read-atom current))))
 
 (defn read-list! [reader-object]
