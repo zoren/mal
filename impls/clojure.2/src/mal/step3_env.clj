@@ -7,7 +7,7 @@
 (defn READ [s]
   (mal.reader/read-form s))
 
-(def EVAL)
+(declare EVAL)
 
 (defn eval-ast [ast env]
   (cond

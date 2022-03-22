@@ -57,7 +57,7 @@
   (peek reader-atom)
   (next! reader-atom))
 
-(def read-list!)
+(declare read-list!)
 
 (def unescape-mapping
   {\" \"
