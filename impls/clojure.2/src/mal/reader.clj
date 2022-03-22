@@ -3,7 +3,7 @@
   (:require
    [clojure.string]))
 
-(def token-regex 
+(def token-regex
   #"[\s,]*(~@|[\[\]{}()'`~^@]|\"(?:\\.|[^\\\"])*\"?|;.*|[^\s\[\]{}('\"`,;)]*)")
 
 (defn tokenize [s]
@@ -12,8 +12,7 @@
        (map second)
        butlast
        (filter #(seq %))
-       (filter #(not= \; (first %)))
-       ))
+       (filter #(not= \; (first %)))))
 
 (defn try-parse-long [s]
   (try
@@ -25,11 +24,11 @@
   (if-let [integer (try-parse-long s)]
     integer
     (case s
-     "nil" nil
-     "false" false
+      "nil" nil
+      "false" false
       "true" true
 
-     (symbol s))))
+      (symbol s))))
 
 (comment
   (read-atom "nil")
