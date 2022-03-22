@@ -1,4 +1,4 @@
-(ns mal.step4-if-fn-do
+(ns mal.step6-file
   (:require
    [mal.printer]
    [mal.reader]
