@@ -165,8 +165,6 @@
   (let [e (mal.env/make-env)]
     (doseq [[s f] (merge mal.core/ns mal-ns)]
       (mal.env/set-symbol s f e))
-    ;(rep "(def! a 7)" e)
-;    (rep "(quote (a a))" e)
     (rep "(quasiquote (a a))" e)
     (rep "(cons 1 (cons 2 (cons 3 nil)))" e))
 
