@@ -19,58 +19,58 @@
 
 (defrecord Closure [ast params env])
 
-(defn pr-str 
+(defn pr-str
   ([outer-ds] (pr-str outer-ds true))
   ([outer-ds print-readably]
-  ((fn go [ds]
-     (cond
-       (nil? ds)
-       "nil"
+   ((fn go [ds]
+      (cond
+        (nil? ds)
+        "nil"
 
-       (= ds false)
-       "false"
+        (= ds false)
+        "false"
 
-       (= ds true)
-       "true"
+        (= ds true)
+        "true"
 
-       (symbol? ds)
-       (str ds)
+        (symbol? ds)
+        (str ds)
 
-       (number? ds)
-       (str ds)
+        (number? ds)
+        (str ds)
 
-       (list? ds)
-       (str \( (->> ds
-                    (map go)
-                    (str/join " ")) \))
+        (list? ds)
+        (str \( (->> ds
+                     (map go)
+                     (str/join " ")) \))
 
-       (vector? ds)
-       (str \[ (->> ds
-                    (map go)
-                    (str/join " ")) \])
+        (vector? ds)
+        (str \[ (->> ds
+                     (map go)
+                     (str/join " ")) \])
 
-       (instance? Closure ds)
-       "#<function>"
+        (instance? Closure ds)
+        "#<function>"
 
-       (map? ds)
-       (str \{ (->> ds
-                    (mapcat identity)
-                    (map go)
-                    (str/join " ")) \})
+        (map? ds)
+        (str \{ (->> ds
+                     (mapcat identity)
+                     (map go)
+                     (str/join " ")) \})
 
-       (string? ds)
-       (if print-readably
-         (str \" (escape ds) \")
-         ds)
+        (string? ds)
+        (if print-readably
+          (str \" (escape ds) \")
+          ds)
 
-       (keyword? ds)
-       (str ds)
+        (keyword? ds)
+        (str ds)
 
-       (instance? clojure.lang.Atom ds)
-       (str "(atom " (go @ds) \))
+        (instance? clojure.lang.Atom ds)
+        (str "(atom " (go @ds) \))
 
-       :else
-       (throw (ex-info "pr-str: unknown data" {:pr-str pr-str})))) outer-ds)))
+        :else
+        (throw (ex-info "pr-str: unknown data" {:pr-str pr-str})))) outer-ds)))
 
 (comment
   (pr-str '(= 2 3))
