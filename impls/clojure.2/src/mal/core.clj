@@ -24,5 +24,8 @@
    'println (fn [& params] (println (clojure.string/join " " (map #(mal.printer/pr-str % false) params))) nil)
    'cons (fn [e l] (apply list (cons e l))) 
    'concat (fn [& ls] (apply list (apply concat ls))) 
-   'vec vec ; 
+   'vec vec
+   'nth nth
+   'first first
+   'rest (fn [coll] (apply list (rest coll)));
    })

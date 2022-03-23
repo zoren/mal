@@ -17,7 +17,7 @@
 (comment
   (escape "abc\ndef"))
 
-(defrecord Closure [ast params env])
+(defrecord Closure [ast params env is-macro])
 
 (defn pr-str
   ([outer-ds] (pr-str outer-ds true))

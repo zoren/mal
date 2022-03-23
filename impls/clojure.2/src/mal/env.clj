@@ -32,7 +32,15 @@
       current-env
       (when outer (recur outer)))))
 
-(defn get-symbol [k env]
+(defn get-symbol
+  "Get symbol from env, throw an exception if not found."
+  [k env]
   (if-let [{data :data} (find-symbol k env)]
     (@data k)
     (throw (ex-info (str \" k \" " not found") {:k k}))))
+
+(defn try-get-symbol
+  "Try to get a symbol from the environment, nil when not found. Not safe for nil values in env."
+  [k env]
+  (when-let [{data :data} (find-symbol k env)]
+    (@data k)))
