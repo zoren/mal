@@ -14,12 +14,15 @@
        (filter #(seq %))
        (filter #(not= \; (first %)))))
 
-(defn parse-nil-or-symbol [s]
-  (when-not (= s "nil")
-    (symbol s)))
-
 (defn read-atom [s]
-  (or (parse-long s) (parse-boolean s) (parse-nil-or-symbol s)))
+  (if-let [integer (parse-long s)]
+    integer
+    (case s
+      "nil" nil
+      "false" false
+      "true" true
+
+      (symbol s))))
 
 (comment
   (read-atom "nil")
