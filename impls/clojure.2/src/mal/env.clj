@@ -5,7 +5,7 @@
         [_ rest] (drop-while (fn [s] (not= s '&)) params)
         binding-map (into {} (map vector before-amp (take (count before-amp) args)))]
     (if rest
-      (assoc binding-map rest (into () (drop (count before-amp) args)))
+      (assoc binding-map rest (apply list (drop (count before-amp) args)))
       binding-map)))
 
 (comment
