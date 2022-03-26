@@ -51,8 +51,7 @@
             ]
         (if (and (list? elt) (= 'splice-unquote (first elt)))
           (list 'concat (second elt) (quasiquote elts))
-          (list 'cons (quasiquote elt) (quasiquote elts)) ; not sure
-          )))
+          (list 'cons (quasiquote elt) (quasiquote elts)))))
 
     (or (map? ast) (symbol? ast))
     (list 'quote ast)
@@ -82,9 +81,7 @@
   (if (list? ast)
     (if (empty? ast)
       ast
-      (let [ast (macroexpand ast env)
-            ;ast (if (list? ast) ast (eval-ast ast env))
-            ]
+      (let [ast (macroexpand ast env)]
         (if-not (list? ast)
           (eval-ast ast env)
           (let [[first-form & forms] ast]

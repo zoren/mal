@@ -50,8 +50,7 @@
             ]
         (if (and (list? elt) (= 'splice-unquote (first elt)))
           (list 'concat (second elt) (quasiquote elts))
-          (list 'cons (quasiquote elt) (quasiquote elts)) ; not sure
-          )))
+          (list 'cons (quasiquote elt) (quasiquote elts)))))
 
     (or (map? ast) (symbol? ast))
     (list 'quote ast)
