@@ -130,7 +130,7 @@
 
 (def mal-ns
   {'eval (fn [ast] (EVAL ast repl-env))
-   'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) (map (fn [ast] (EVAL ast repl-env)) params)))})
+   'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) params))})
 
 (doseq [[s f] (merge mal.core/ns mal-ns)]
   (mal.env/set-symbol s f repl-env))

@@ -175,10 +175,9 @@
 
 (def mal-ns
   {'eval (fn [ast] (EVAL ast repl-env))
-   'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) (map (fn [ast] (EVAL ast repl-env)) params))) ; todo seems wrong to call eval here
+   'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) params))
    'apply (fn [f & args] (mal-apply f (spread args)))
-   'map (fn [f l] (apply list (map (fn [e] (mal-apply f [e])) l)))
-   })
+   'map (fn [f l] (apply list (map #(mal-apply f [%]) l)))})
 
 (doseq [[s f] (merge mal.core/ns mal-ns)]
   (mal.env/set-symbol s f repl-env))
@@ -200,5 +199,5 @@
       (catch Exception e
         (if (= (:type (ex-data e)) :mal-exception)
           (println (str "error: " (-> e ex-data :value)))
-          (println (str "error:" (ex-message e))))))
+          (println (str "error: " (ex-message e))))))
     (recur)))
