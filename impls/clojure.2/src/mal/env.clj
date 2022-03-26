@@ -1,4 +1,6 @@
-(ns mal.env)
+(ns mal.env
+  (:require
+   [mal.core]))
 
 (defn bind [params args]
   (let [before-amp (take-while (fn [s] (not= s '&)) params)
@@ -37,7 +39,7 @@
   [k env]
   (if-let [{data :data} (find-symbol k env)]
     (@data k)
-    (throw (ex-info (str \" k \" " not found") {:k k}))))
+    (mal.core/mal-throw (str \' k \' " not found"))))
 
 (defn try-get-symbol
   "Try to get a symbol from the environment, nil when not found. Not safe for nil values in env."
