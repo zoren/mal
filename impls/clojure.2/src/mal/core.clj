@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [ns])
   (:require
    [clojure.string]
-   [mal.printer]))
+   [mal.printer]
+   [mal.reader]))
 
 (defn mal-throw [value]
   (throw (ex-info "mal-exception" {:type :mal-exception :value value})))
@@ -56,5 +57,13 @@
    'get get
    'contains? contains?
    'keys (fn [m] (apply list (keys m)))
-   'vals (fn [m] (apply list (vals m))) ;
+   'vals (fn [m] (apply list (vals m)))
+
+   'read-string mal.reader/read-form
+   'slurp slurp
+   'atom (fn [v] (clojure.core/atom v))
+   'atom? (fn [a] (instance? clojure.lang.Atom a))
+   'deref deref
+   'reset! reset!
+   '*ARGV* (apply list *command-line-args*) ;
    })

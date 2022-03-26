@@ -156,15 +156,8 @@
   (mal.env/make-env))
 
 (def mal-ns
-  {'read-string mal.reader/read-form
-   'slurp slurp
-   'eval (fn [ast] (EVAL ast repl-env))
-   'atom (fn [v] (clojure.core/atom v))
-   'atom? (fn [a] (instance? clojure.lang.Atom a))
-   'deref deref
-   'reset! reset!
-   'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) (map (fn [ast] (EVAL ast repl-env)) params)))
-   '*ARGV* (apply list *command-line-args*)})
+  {'eval (fn [ast] (EVAL ast repl-env))
+   'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) (map (fn [ast] (EVAL ast repl-env)) params)))})
 
 (doseq [[s f] (merge mal.core/ns mal-ns)]
   (mal.env/set-symbol s f repl-env))

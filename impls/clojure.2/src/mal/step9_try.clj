@@ -174,17 +174,11 @@
     :else (cons (first arglist) (spread (next arglist)))))
 
 (def mal-ns
-  {'read-string mal.reader/read-form
-   'slurp slurp
-   'eval (fn [ast] (EVAL ast repl-env))
-   'atom (fn [v] (clojure.core/atom v))
-   'atom? (fn [a] (instance? clojure.lang.Atom a))
-   'deref deref
-   'reset! reset!
+  {'eval (fn [ast] (EVAL ast repl-env))
    'swap! (fn [a f & params] (apply swap! a (fn [& ps] (mal-apply f ps)) (map (fn [ast] (EVAL ast repl-env)) params))) ; todo seems wrong to call eval here
-   '*ARGV* (apply list *command-line-args*)
    'apply (fn [f & args] (mal-apply f (spread args)))
-   'map (fn [f l] (apply list (map (fn [e] (mal-apply f [e])) l)))})
+   'map (fn [f l] (apply list (map (fn [e] (mal-apply f [e])) l)))
+   })
 
 (doseq [[s f] (merge mal.core/ns mal-ns)]
   (mal.env/set-symbol s f repl-env))
