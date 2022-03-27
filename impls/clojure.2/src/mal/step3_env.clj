@@ -41,9 +41,7 @@
           (= first-form 'let*)
           (let [[bindings body] forms
                 new-env (mal.env/make-env env)]
-            (prn bindings body new-env)
             (doseq [[name exp] (partition 2 bindings)]
-              (prn name exp)
               (mal.env/set-symbol name (EVAL exp new-env) new-env))
             (EVAL body new-env))
 
