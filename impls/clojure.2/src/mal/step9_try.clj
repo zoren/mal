@@ -150,7 +150,9 @@
               :else
               (let [f (EVAL first-form env)
                     args (for [form forms] (EVAL form env))]
-                (mal-apply f args)))))))
+                (if (fn? f)
+                  (apply f args)
+                  (recur (:ast f) (mal.env/make-closure-env f args)))))))))
     (eval-ast ast env)))
 
 (defn PRINT [s]

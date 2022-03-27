@@ -24,6 +24,9 @@
   ([outer binds values]
    (make-env outer (bind binds values))))
 
+(defn make-closure-env [{:keys [env params]} args]
+  (mal.env/make-env env params args))
+
 (defn set-symbol [k v {data :data}]
   (swap! data assoc k v)
   nil)

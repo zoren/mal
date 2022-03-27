@@ -152,7 +152,7 @@
                     args (for [form forms] (EVAL form env))]
                 (if (fn? f)
                   (apply f args)
-                  (recur (:ast f) (mal.core/bind-closure-args f args)))))))))
+                  (recur (:ast f) (mal.env/make-closure-env f args)))))))))
     (eval-ast ast env)))
 
 (defn PRINT [s]
