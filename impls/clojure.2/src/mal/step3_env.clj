@@ -48,9 +48,7 @@
             (EVAL body new-env))
 
           :else
-          (do
-            (prn first-form forms (EVAL first-form env))
-            (apply (EVAL first-form env) (for [form forms] (EVAL form env)))))))
+          (apply (EVAL first-form env) (for [form forms] (EVAL form env))))))
     (eval-ast ast env)))
 
 (defn PRINT [s]

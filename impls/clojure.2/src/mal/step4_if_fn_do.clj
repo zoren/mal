@@ -68,7 +68,6 @@
                 args (for [form forms] (EVAL form env))]
             (if (fn? f)
               (apply f args)
-
               (let [{:keys [ast params env]} f
                     new-env (mal.env/make-env env params args)]
                 (recur ast new-env)))))))
