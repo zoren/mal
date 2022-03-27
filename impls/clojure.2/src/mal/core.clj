@@ -65,5 +65,15 @@
    'atom? (fn [a] (instance? clojure.lang.Atom a))
    'deref deref
    'reset! reset!
-   '*ARGV* (apply list *command-line-args*) ;
+   '*ARGV* (apply list *command-line-args*)
+   'readline (fn [prompt] (println prompt) (read-line))
+   '*host-language* "clojure"
+   'time-ms (fn [& _] (mal-throw "not supported"))
+   'meta (fn [& _] (mal-throw "not supported"))
+   'with-meta (fn [& _] (mal-throw "not supported"))
+   'fn? (fn [& _] (mal-throw "not supported"))
+   'string? (fn [& _] (mal-throw "not supported"))
+   'number? (fn [& _] (mal-throw "not supported"))
+   'seq (fn [& _] (mal-throw "not supported"))
+   'conj (fn [& _] (mal-throw "not supported"));
    })
