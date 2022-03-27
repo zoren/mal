@@ -6,7 +6,7 @@
    [mal.reader]))
 
 (defn mal-throw [value]
-  (throw (ex-info "mal-exception" {:type :mal-exception :value value})))
+  (throw (ex-info (str "mal-exception: " value) {:type :mal-exception :value value})))
 
 (defn mal-exception? [e] (-> e ex-data :type (= :mal-exception)))
 
