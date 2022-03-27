@@ -65,7 +65,6 @@
    'atom? (fn [a] (instance? clojure.lang.Atom a))
    'deref deref
    'reset! reset!
-   '*ARGV* (apply list *command-line-args*)
    'readline (fn [prompt] (println prompt) (read-line))
    '*host-language* "clojure"
    'time-ms (fn [& _] (mal-throw "not supported"))

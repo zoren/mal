@@ -141,27 +141,16 @@
 
 (rep "(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\nnil)\")))))" repl-env)
 
-(loop []
-  (print "user> ")
-  (flush)
-  (when-let [line (read-line)]
-    (try
-      (println (rep line repl-env))
-      (catch Exception e
-        (println (str "error:" (ex-message e)))))
-    (recur)))
+(mal.env/set-symbol '*ARGV* (apply list (rest *command-line-args*)) repl-env)
 
-(comment
-  (let [e (mal.env/make-env)]
-    (doseq [[s f] (merge mal.core/ns mal-ns)]
-      (mal.env/set-symbol s f e))
-    (rep "(quasiquote (a a))" e)
-    (rep "(cons 1 (cons 2 (cons 3 nil)))" e))
-
-  (EVAL '(quasiquote (a (unquote a) a))
-        '{a 4})
-  (EVAL 'a
-        '{a 4}) ;
-  (EVAL '(list 1 2 3)
-        '{a 4}) ;
-  (quote (1 2 3)))
+(if *command-line-args*
+  (rep (str "(load-file \"" (first *command-line-args*) "\")") repl-env)
+  (loop []
+    (print "user> ")
+    (flush)
+    (when-let [line (read-line)]
+      (try
+        (println (rep line repl-env))
+        (catch Exception e
+          (println (str "error:" (ex-message e)))))
+      (recur))))
