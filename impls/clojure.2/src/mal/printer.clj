@@ -73,7 +73,7 @@
         (str "(atom " (go @ds) \))
 
         :else
-        (throw (ex-info "pr-str: unknown data" {:pr-str pr-str})))) outer-ds)))
+        (throw (ex-info "pr-str: unknown data" {:data ds})))) outer-ds)))
 
 (comment
   (pr-str '(= 2 3))
