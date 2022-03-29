@@ -125,6 +125,11 @@
         (list 'splice-unquote (read-form! reader-object))
         (list 'unquote (read-form! reader-object)))
 
+      \^
+      (let [f (read-form! reader-object)
+            m (read-form! reader-object)]
+        (list 'with-meta m f))
+
       (read-atom current))))
 
 (defn read-list! [reader-object]

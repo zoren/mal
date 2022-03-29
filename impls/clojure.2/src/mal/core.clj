@@ -69,12 +69,17 @@
    'reset! reset!
    'readline (fn [prompt] (println prompt) (read-line))
    '*host-language* "clojure"
-   'time-ms (fn [& _] (mal-throw "not supported"))
-   'meta (fn [& _] (mal-throw "not supported"))
-   'with-meta (fn [& _] (mal-throw "not supported"))
-   'fn? (fn [& _] (mal-throw "not supported"))
-   'string? (fn [& _] (mal-throw "not supported"))
-   'number? (fn [& _] (mal-throw "not supported"))
-   'seq (fn [& _] (mal-throw "not supported"))
-   'conj (fn [& _] (mal-throw "not supported"));
+   'time-ms (fn [] (quot (. System (nanoTime)) 1000000))
+   'meta (fn [o] (:mal/meta (meta o)))
+   'with-meta (fn [obj m] (with-meta obj {:mal/meta m}))
+   'fn? (fn [v] (or (fn? v) (mal.printer/closure? v)))
+   'string? string?
+   'number? number?
+   'seq (fn [coll] (if (empty? coll)
+                     nil
+                     (apply list
+                            (if (string? coll)
+                              (map str coll)
+                              coll))))
+   'conj conj ;
    })

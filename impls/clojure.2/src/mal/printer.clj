@@ -19,6 +19,8 @@
 
 (defrecord Closure [ast params env is-macro])
 
+(def closure? (partial instance? Closure))
+
 (defn pr-str
   ([outer-ds] (pr-str outer-ds true))
   ([outer-ds print-readably]
@@ -49,7 +51,7 @@
                      (map go)
                      (str/join " ")) \])
 
-        (instance? Closure ds)
+        (closure? ds)
         "#<function>"
 
         (fn? ds)
