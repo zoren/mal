@@ -59,7 +59,9 @@
    'keys (fn [m] (apply list (keys m)))
    'vals (fn [m] (apply list (vals m)))
 
-   'read-string mal.reader/read-form
+   'read-string (fn [s] (try (mal.reader/read-form s)
+                             (catch Exception e
+                               (-> e ex-message str mal-throw))))
    'slurp slurp
    'atom (fn [v] (clojure.core/atom v))
    'atom? (fn [a] (instance? clojure.lang.Atom a))
