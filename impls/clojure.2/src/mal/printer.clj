@@ -52,6 +52,9 @@
         (instance? Closure ds)
         "#<function>"
 
+        (fn? ds)
+        "#<function>"
+
         (map? ds)
         (str \{ (->> ds
                      (mapcat identity)
