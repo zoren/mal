@@ -140,17 +140,7 @@
       nil
       (throw (ex-info "reached EOF inside list unbalanced" {}))
 
-      \)
-      (do
-        (next! reader-object)
-        result)
-
-      \]
-      (do
-        (next! reader-object)
-        result)
-
-      \}
+      (\) \] \})
       (do
         (next! reader-object)
         result)
