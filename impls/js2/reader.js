@@ -6,6 +6,8 @@ const tokenize = str =>
 
 const make_symbol = s => ({ type: 'symbol', value: s })
 
+export const keyword = s => ({ type: 'keyword', value: s })
+
 const read_atom = s => {
   switch (s) {
     case 'nil':
@@ -32,13 +34,13 @@ const make_reader = tokens => {
   }
 }
 
-const list = (...args) => ({ type: 'list', value: args })
+export const list = (...args) => ({ type: 'list', value: args })
 
-const vector = (...args) => ({ type: 'vector', value: args })
+export const vector = (...args) => ({ type: 'vector', value: args })
 
-const hash_map = (...args) => ({ type: 'hash-map', value: args })
+export const hash_map = (...args) => ({ type: 'hash-map', value: args })
 
-const apply = (f, array) => f.apply(null, array)
+export const apply = (f, array) => f.apply(null, array)
 
 const unescapeMap = {
   '"': '"',
@@ -99,6 +101,8 @@ const read_form = reader => {
             throw new Error('unbalanced quotes in string')
           return unescape(token.substring(1, token.length - 1))
         }
+        case ':':
+          return keyword(token.substring(1))
         default:
           return read_atom(token)
       }

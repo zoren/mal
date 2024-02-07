@@ -32,6 +32,8 @@ export const pr_str = form => {
   switch (type) {
     case 'symbol':
       return form.value
+    case 'keyword':
+      return `:${form.value}`
     case 'list':
       return `(${form.value.map(pr_str).join(' ')})`
     case 'vector':
