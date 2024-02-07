@@ -1,0 +1,2 @@
+#!/bin/bash
+exec node ${STEP:-stepA_mal}.js "${@}"
