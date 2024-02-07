@@ -1,3 +1,5 @@
+import { list } from './core.js'
+
 const regex =
   /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g
 
@@ -33,8 +35,6 @@ const make_reader = tokens => {
     },
   }
 }
-
-export const list = (...args) => ({ type: 'list', value: args })
 
 export const vector = (...args) => ({ type: 'vector', value: args })
 
