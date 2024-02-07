@@ -28,6 +28,7 @@ export const pr_str = form => {
   }
   if (typeof form === 'number') return form.toString()
   if (typeof form === 'string') return `"${escape(form)}"`
+  if (typeof form === 'function') return `#<function>`
   const type = form.type
   switch (type) {
     case 'symbol':
