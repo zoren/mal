@@ -53,8 +53,7 @@ const unescape = s => {
       i++
       if (i === s.length) throw new Error('unbalanced quotes in string')
       const escape = unescapeMap[s[i]]
-      if (!escape)
-        throw new Error(`unexpected escape character: \\${s[i]}`)
+      if (!escape) throw new Error(`unexpected escape character: \\${s[i]}`)
       result.push(escape)
     } else {
       result.push(s[i])
@@ -77,6 +76,21 @@ const read_form = reader => {
     case '}':
     case ']':
       throw new Error("unexpected ')'")
+    case "'":
+      return list(make_symbol('quote'), read_form(reader))
+    case '`':
+      return list(make_symbol('quasiquote'), read_form(reader))
+    case '~':
+      return list(make_symbol('unquote'), read_form(reader))
+    case '~@':
+      return list(make_symbol('splice-unquote'), read_form(reader))
+    case '@':
+      return list(make_symbol('deref'), read_form(reader))
+    case '^': {
+      const form = read_form(reader)
+      const meta = read_form(reader)
+      return list(make_symbol('with-meta'), meta, form)
+    }
     default:
       switch (token[0]) {
         case '"': {
