@@ -8,7 +8,10 @@ const isPrimitive = v => {
   return t === 'number' || t === 'string' || t === 'boolean'
 }
 
-const makeRuntimeValue = (type) => (...args) => Object.freeze({ type, value: args })
+const makeRuntimeValue =
+  type =>
+  (...args) =>
+    Object.freeze({ type, value: args })
 
 export const list = (...args) => ({ type: 'list', value: args })
 
@@ -16,7 +19,8 @@ export const vector = (...args) => ({ type: 'vector', value: args })
 
 export const hash_map = (...args) => ({ type: 'hash-map', value: args })
 
-export const hasTag = (tag) => (ast) => ast !== null && typeof ast === 'object' && ast.type === tag
+export const hasTag = tag => ast =>
+  ast !== null && typeof ast === 'object' && ast.type === tag
 
 export const isList = hasTag('list')
 
@@ -24,7 +28,12 @@ export const isVector = hasTag('vector')
 
 export const isHashMap = hasTag('hash-map')
 
-export const isSymbol = (ast) => (ast !== null && typeof ast === 'object' && ast.type === 'symbol') ? ast.value : null
+export const isClosure = hasTag('closure')
+
+export const isSymbol = ast =>
+  ast !== null && typeof ast === 'object' && ast.type === 'symbol'
+    ? ast.value
+    : null
 
 const isSeq = ast => isList(ast) || isVector(ast)
 
@@ -49,7 +58,7 @@ export const cons = (e, l) => list(e, ...l.value)
 
 export const concat = (...args) => {
   const result = []
-  for(const arg of args) {
+  for (const arg of args) {
     if (arg === null) continue
     if (isSeq(arg)) result.push(...arg.value)
     else result.push(arg)
@@ -69,7 +78,7 @@ export const repl_env = {
     console.log(pr_str(v, true))
     return null
   },
-  list,
+  list: list,
   'list?': isList,
   'empty?': a => a.value.length === 0,
   count: a => (isSeq(a) ? a.value.length : 0),
@@ -91,6 +100,7 @@ export const repl_env = {
   },
   'read-string': str => read_str(str),
   slurp: filepath => fs.readFileSync(filepath, 'utf-8'),
+  
   atom: v => ({ type: 'atom', value: v }),
   'atom?': v => v.type === 'atom',
   deref: v => v.value,
@@ -98,9 +108,18 @@ export const repl_env = {
     atom.value = v
     return v
   },
+
   cons,
   concat,
-  vec: (l) => vector(...l.value),
+  vec: l => vector(...l.value),
+  nth: (l, n) => {
+    if (isSeq(l) && n < l.value.length) {
+      return l.value[n]
+    }
+    throw new Error('Index out of bounds')
+  },
+  first: l => (isSeq(l) && l.value.length > 0 ? l.value[0] : null),
+  rest: l => (isSeq(l) && l.value.length > 0 ? list(...l.value.slice(1)) : list()),
   // 'swap!': (atom, f, ...args) => {
   //   atom.value = f(atom.value, ...args)
   //   return atom.value

@@ -19,6 +19,8 @@ export class Env {
   }
 }
 
+import { list } from './core.js'
+
 export const makeClosureEnv = params => {
   const ampIndex = params.value.findIndex(p => p.value === '&')
   const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
