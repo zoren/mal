@@ -1,4 +1,4 @@
-import { Env, makeClosureEnv } from './env.js'
+import { Env } from './env.js'
 import { read_str, apply } from './reader.js'
 import { pr_str } from './printer.js'
 import {
@@ -95,6 +95,19 @@ const macroExpand = (ast, env) => {
   return ast
 }
 
+const makeClosureEnv = (params, env) => {
+  const ampIndex = params.value.findIndex(p => p.value === '&')
+  const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
+  const restParam = ampIndex === -1 ? null : params.value[ampIndex + 1]
+  return (args) => {
+    const newEnv = new Env(env)
+    for (let i = 0; i < regParamEnd; i++)
+      newEnv.set(params.value[i].value, args[i])
+    if (restParam) newEnv.set(restParam.value, list(...args.slice(regParamEnd)))
+    return newEnv
+  }
+}
+
 const EVAL = (ast, env) => {
   while (true) {
     if (ast === null) return null
@@ -143,9 +156,9 @@ const EVAL = (ast, env) => {
         }
         case 'fn*': {
           const [params, body] = rest
-          const closureCtor = makeClosureEnv(params)
-          const fn = (...args) => EVAL(body, closureCtor(args, env))
-          return { type: 'closure', ast: body, params, env, fn, closureCtor }
+          const closureCtor = makeClosureEnv(params, env)
+          const fn = (...args) => EVAL(body, closureCtor(args))
+          return { type: 'closure', ast: body, fn, closureCtor }
         }
         case 'quote': {
           return rest[0]
@@ -166,12 +179,8 @@ const EVAL = (ast, env) => {
     const args = rest.map(arg => EVAL(arg, env))
     if (isClosure(f)) {
       ast = f.ast
-      env = f.closureCtor(args, f.env)
+      env = f.closureCtor(args)
       continue
-    }
-    if (typeof f !== 'function') {
-      console.log(f)
-      throw new Error(`${f} is not a function`)
     }
     return f(...args)
   }
