@@ -17,7 +17,11 @@ export const list = (...args) => ({ type: 'list', value: args })
 
 export const vector = (...args) => ({ type: 'vector', value: args })
 
-export const hash_map = (...args) => ({ type: 'hash-map', value: args })
+export const hash_map = (...args) => {
+  const value = new Map()
+  for (let i = 0; i < args.length; i += 2) value.set(args[i], args[i + 1])
+  return { type: 'hash-map', value }
+}
 
 export const hasTag = tag => ast =>
   ast !== null && typeof ast === 'object' && ast.type === tag
@@ -29,6 +33,8 @@ export const isVector = hasTag('vector')
 export const isHashMap = hasTag('hash-map')
 
 export const isClosure = hasTag('closure')
+
+const isKeyword = ast => typeof ast === 'symbol'
 
 export const isSymbol = ast =>
   ast !== null && typeof ast === 'object' && ast.type === 'symbol'
@@ -49,6 +55,11 @@ const equal = (a, b) => {
       return true
     }
     if (a.type !== b.type) return false
+    if (isHashMap(a) && isHashMap(b)) {
+      if (a.value.size !== b.value.size) return false
+      for (const [k, v] of a.value) if (!equal(v, b.value.get(k))) return false
+      return true
+    }
     return a.value === b.value
   }
   return true
@@ -68,6 +79,15 @@ export const concat = (...args) => {
 
 export const symbol = s => ({ type: 'symbol', value: s })
 
+export const keyword = s => (typeof s === 'symbol' ? s : Symbol.for(s))
+
+export class MalError extends Error {
+  constructor(value) {
+    super("mal error")
+    this.value = value
+  }
+}
+
 export const repl_env = {
   '+': (a, b) => a + b,
   '-': (a, b) => a - b,
@@ -78,7 +98,7 @@ export const repl_env = {
     console.log(pr_str(v, true))
     return null
   },
-  list: list,
+  list,
   'list?': isList,
   'empty?': a => a.value.length === 0,
   count: a => (isSeq(a) ? a.value.length : 0),
@@ -100,7 +120,7 @@ export const repl_env = {
   },
   'read-string': str => read_str(str),
   slurp: filepath => fs.readFileSync(filepath, 'utf-8'),
-  
+
   atom: v => ({ type: 'atom', value: v }),
   'atom?': v => v.type === 'atom',
   deref: v => v.value,
@@ -113,15 +133,49 @@ export const repl_env = {
   concat,
   vec: l => vector(...l.value),
   nth: (l, n) => {
-    if (isSeq(l) && n < l.value.length) {
-      return l.value[n]
-    }
-    throw new Error('Index out of bounds')
+    if (isSeq(l) && n < l.value.length) return l.value[n]
+    throw new MalError('Index out of bounds')
   },
   first: l => (isSeq(l) && l.value.length > 0 ? l.value[0] : null),
-  rest: l => (isSeq(l) && l.value.length > 0 ? list(...l.value.slice(1)) : list()),
-  // 'swap!': (atom, f, ...args) => {
-  //   atom.value = f(atom.value, ...args)
-  //   return atom.value
-  // },
+  rest: l =>
+    isSeq(l) && l.value.length > 0 ? list(...l.value.slice(1)) : list(),
+  throw: value => {
+    throw new MalError(value)
+  },
+  apply: (f, ...args) => {
+    const butLast = args.slice(0, -1)
+    const last = args.at(-1)
+    if (isClosure(f)) return f.fn(...butLast, ...last.value)
+    return f(...butLast, ...last.value)
+  },
+  map: (f, l) => list(...l.value.map(v => (isClosure(f) ? f.fn(v) : f(v)))),
+  'nil?': v => v === null,
+  'true?': v => v === true,
+  'false?': v => v === false,
+  'symbol?': v => isSymbol(v) !== null,
+
+  symbol,
+  keyword,
+  'keyword?': isKeyword,
+  vector,
+  'vector?': isVector,
+  'sequential?': isSeq,
+  'hash-map': hash_map,
+  'map?': isHashMap,
+  assoc: (h, ...kvs) => {
+    const value = new Map(h.value)
+    for (let i = 0; i < kvs.length; i += 2) {
+      value.set(kvs[i], kvs[i + 1])
+    }
+    return { type: 'hash-map', value }
+  },
+  dissoc: (h, ...keys) => {
+    const value = new Map(h.value)
+    for (const key of keys) value.delete(key)
+    return { type: 'hash-map', value }
+  },
+  get: (h, k) => (isHashMap(h) && h.value.has(k) ? h.value.get(k) : null),
+  'contains?': (h, k) => h.value.has(k),
+  keys: h => list(...h.value.keys()),
+  vals: h => list(...h.value.values()),
 }

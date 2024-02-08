@@ -1,12 +1,10 @@
-import { list, symbol, vector, hash_map } from './core.js'
+import { list, symbol, keyword, vector, hash_map } from './core.js'
 
 const regex =
   /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g
 
 const tokenize = str =>
   [...str.matchAll(regex)].map(m => m[1]).filter(s => s.length > 0 && s[0] !== ';')
-
-export const keyword = s => ({ type: 'keyword', value: s })
 
 const read_atom = s => {
   switch (s) {

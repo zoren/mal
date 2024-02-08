@@ -33,18 +33,17 @@ export const pr_str = (form, printReadably) => {
       return form
     }
     if (typeof form === 'function') return `#<function>`
+    if (typeof form === 'symbol') return `:${Symbol.keyFor(form)}`
     const type = form.type
     switch (type) {
       case 'symbol':
         return form.value
-      case 'keyword':
-        return `:${form.value}`
       case 'list':
         return `(${form.value.map(go).join(' ')})`
       case 'vector':
         return `[${form.value.map(go).join(' ')}]`
       case 'hash-map':
-        return `{${form.value.map(go).join(' ')}}`
+        return `{${[...form.value.entries()].map(([k, v])=>`${go(k)} ${go(v)}`).join(' ')}}`
       case 'closure':
         return `#<function>`
       case 'atom':

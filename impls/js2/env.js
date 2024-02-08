@@ -1,3 +1,5 @@
+import { MalError, list } from './core.js'
+
 export class Env {
   constructor(outer = null) {
     this.outer = outer
@@ -11,15 +13,13 @@ export class Env {
   find(key) {
     if (key in this.data) return this
     if (this.outer) return this.outer.find(key)
-    throw new Error(`'${key}' not found`)
+    throw new MalError(`'${key}' not found`)
   }
 
   get(key) {
     return this.find(key).data[key]
   }
 }
-
-import { list } from './core.js'
 
 export const makeClosureEnv = params => {
   const ampIndex = params.value.findIndex(p => p.value === '&')
