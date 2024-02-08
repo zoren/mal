@@ -1,4 +1,6 @@
+import fs from 'node:fs'
 import { pr_str } from './printer.js'
+import { read_str } from './reader.js'
 
 const isPrimitive = v => {
   if (v === null) return true
@@ -6,21 +8,26 @@ const isPrimitive = v => {
   return t === 'number' || t === 'string' || t === 'boolean'
 }
 
+const makeRuntimeValue = (type) => (...args) => Object.freeze({ type, value: args })
+
 export const list = (...args) => ({ type: 'list', value: args })
 
-export const isList = ast =>
-  ast !== null &&
-  typeof ast === 'object' &&
-  typeof ast.type === 'string' &&
-  ast.type === 'list'
-export const isVector = ast =>
-  ast !== null &&
-  typeof ast === 'object' &&
-  typeof ast.type === 'string' &&
-  ast.type === 'vector'
+export const vector = (...args) => ({ type: 'vector', value: args })
 
-export const isSymbol = ast => ast.type === 'symbol'
+export const hash_map = (...args) => ({ type: 'hash-map', value: args })
+
+export const hasTag = (tag) => (ast) => ast !== null && typeof ast === 'object' && ast.type === tag
+
+export const isList = hasTag('list')
+
+export const isVector = hasTag('vector')
+
+export const isHashMap = hasTag('hash-map')
+
+export const isSymbol = (ast) => (ast !== null && typeof ast === 'object' && ast.type === 'symbol') ? ast.value : null
+
 const isSeq = ast => isList(ast) || isVector(ast)
+
 const equal = (a, b) => {
   if (a === b) return true
   if (isPrimitive(a) || isPrimitive(b)) return false
@@ -38,6 +45,20 @@ const equal = (a, b) => {
   return true
 }
 
+export const cons = (e, l) => list(e, ...l.value)
+
+export const concat = (...args) => {
+  const result = []
+  for(const arg of args) {
+    if (arg === null) continue
+    if (isSeq(arg)) result.push(...arg.value)
+    else result.push(arg)
+  }
+  return list(...result)
+}
+
+export const symbol = s => ({ type: 'symbol', value: s })
+
 export const repl_env = {
   '+': (a, b) => a + b,
   '-': (a, b) => a - b,
@@ -51,7 +72,7 @@ export const repl_env = {
   list,
   'list?': isList,
   'empty?': a => a.value.length === 0,
-  count: a => (isList(a) || isVector(a) ? a.value.length : 0),
+  count: a => (isSeq(a) ? a.value.length : 0),
   '=': equal,
   '<': (a, b) => a < b,
   '<=': (a, b) => a <= b,
@@ -68,4 +89,20 @@ export const repl_env = {
     console.log(args.map(a => pr_str(a, false)).join(' '))
     return null
   },
+  'read-string': str => read_str(str),
+  slurp: filepath => fs.readFileSync(filepath, 'utf-8'),
+  atom: v => ({ type: 'atom', value: v }),
+  'atom?': v => v.type === 'atom',
+  deref: v => v.value,
+  'reset!': (atom, v) => {
+    atom.value = v
+    return v
+  },
+  cons,
+  concat,
+  vec: (l) => vector(...l.value),
+  // 'swap!': (atom, f, ...args) => {
+  //   atom.value = f(atom.value, ...args)
+  //   return atom.value
+  // },
 }

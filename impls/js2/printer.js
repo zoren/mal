@@ -47,6 +47,8 @@ export const pr_str = (form, printReadably) => {
         return `{${form.value.map(go).join(' ')}}`
       case 'closure':
         return `#<function>`
+      case 'atom':
+        return `(atom ${go(form.value)})`
     }
     if (type) throw new Error(`unhandled type tag: ${type}`)
     throw new Error(`unhandled type: ${form}`)

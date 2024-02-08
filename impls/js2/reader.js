@@ -1,12 +1,10 @@
-import { list } from './core.js'
+import { list, symbol, vector, hash_map } from './core.js'
 
 const regex =
   /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g
 
 const tokenize = str =>
-  [...str.matchAll(regex)].map(m => m[1]).filter(s => s.length > 0)
-
-const make_symbol = s => ({ type: 'symbol', value: s })
+  [...str.matchAll(regex)].map(m => m[1]).filter(s => s.length > 0 && s[0] !== ';')
 
 export const keyword = s => ({ type: 'keyword', value: s })
 
@@ -21,7 +19,7 @@ const read_atom = s => {
     default:
       if (s.match(/^-?[0-9]+$/)) return parseInt(s)
       // else if (s.match(/^-?[0-9][0-9.]*$/)) return parseFloat(s);
-      return make_symbol(s)
+      return symbol(s)
   }
 }
 
@@ -35,10 +33,6 @@ const make_reader = tokens => {
     },
   }
 }
-
-export const vector = (...args) => ({ type: 'vector', value: args })
-
-export const hash_map = (...args) => ({ type: 'hash-map', value: args })
 
 export const apply = (f, array) => f.apply(null, array)
 
@@ -79,19 +73,19 @@ const read_form = reader => {
     case ']':
       throw new Error("unexpected ')'")
     case "'":
-      return list(make_symbol('quote'), read_form(reader))
+      return list(symbol('quote'), read_form(reader))
     case '`':
-      return list(make_symbol('quasiquote'), read_form(reader))
+      return list(symbol('quasiquote'), read_form(reader))
     case '~':
-      return list(make_symbol('unquote'), read_form(reader))
+      return list(symbol('unquote'), read_form(reader))
     case '~@':
-      return list(make_symbol('splice-unquote'), read_form(reader))
+      return list(symbol('splice-unquote'), read_form(reader))
     case '@':
-      return list(make_symbol('deref'), read_form(reader))
+      return list(symbol('deref'), read_form(reader))
     case '^': {
       const form = read_form(reader)
       const meta = read_form(reader)
-      return list(make_symbol('with-meta'), meta, form)
+      return list(symbol('with-meta'), meta, form)
     }
     default:
       switch (token[0]) {
