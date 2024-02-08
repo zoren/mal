@@ -96,8 +96,6 @@ const rep = (str, env) => PRINT(EVAL(READ(str), env))
 import * as readline from 'node:readline'
 import { stdin as input, nextTick, stdout as output } from 'node:process'
 
-const rl = readline.createInterface({ input, output })
-
 const env = new Env()
 
 for (const [key, value] of Object.entries(repl_env)) env.set(key, value)
@@ -120,27 +118,28 @@ rep(
   env,
 )
 
-{
-  const commandLineArgs = process.argv.slice(2)
-  const [first, ...rest] = commandLineArgs
-  env.set('*ARGV*', list(...rest))
-  if (commandLineArgs.length > 0) rep(`(load-file "${first}")`, env)
-}
+const commandLineArgs = process.argv.slice(2)
+const [first, ...rest] = commandLineArgs
+env.set('*ARGV*', list(...rest))
 
-const prompt = () => {
-  rl.question(`user> `, line => {
-    if (line === '') {
-      console.log(`Bye!`)
-      rl.close()
-      return
-    }
-    try {
-      console.log(rep(line, env))
-    } catch (e) {
-      console.log(e.message)
-    }
-    nextTick(prompt)
-  })
+if (commandLineArgs.length > 0) {
+  rep(`(load-file "${first}")`, env)
+} else {
+  const rl = readline.createInterface({ input, output })
+  const prompt = () => {
+    rl.question(`user> `, line => {
+      if (line === '') {
+        console.log(`Bye!`)
+        rl.close()
+        return
+      }
+      try {
+        console.log(rep(line, env))
+      } catch (e) {
+        console.log(e.message)
+      }
+      nextTick(prompt)
+    })
+  }
+  prompt()
 }
-
-prompt()
