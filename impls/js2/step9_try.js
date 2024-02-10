@@ -1,5 +1,5 @@
 import { Env } from './env.js'
-import { read_str, apply } from './reader.js'
+import { read_str } from './reader.js'
 import { pr_str } from './printer.js'
 import {
   repl_env,
@@ -24,20 +24,12 @@ const eval_ast = (ast, env) => {
     case 'symbol':
       return env.get(value)
     case 'list':
-      return apply(
-        list,
-        ast.value.map(x => EVAL(x, env)),
-      )
+      return list(...ast.value.map(x => EVAL(x, env)))
     case 'vector':
-      return apply(
-        vector,
-        ast.value.map(x => EVAL(x, env)),
-      )
+      return vector(...ast.value.map(x => EVAL(x, env)))
     case 'hash-map':
-      return apply(
-        hash_map,
-        // ast.value.map(x => EVAL(x, env)),
-        [].concat(
+      return hash_map(
+        ...[].concat(
           ...[...ast.value.entries()].map(([k, v]) => [k, EVAL(v, env)]),
         ),
       )
@@ -254,7 +246,7 @@ if (commandLineArgs.length > 0) {
       try {
         console.log(rep(line, env))
       } catch (e) {
-        if (e instanceof MalError) console.log('error: '+ pr_str(e.value))
+        if (e instanceof MalError) console.log('error: ' + pr_str(e.value))
         else console.log(e.message)
       }
       nextTick(prompt)

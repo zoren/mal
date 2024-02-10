@@ -1,45 +1,38 @@
-import { read_str, apply, list, vector, hash_map } from './reader.js'
+import { read_str } from './reader.js'
+import { list, isList, vector, hash_map } from './core.js'
 import { pr_str } from './printer.js'
 
 const READ = str => read_str(str)
 
 const eval_ast = (ast, env) => {
-  console.log('eval_ast', ast)
   const { type, value } = ast
   switch (type) {
     case 'symbol':
       return env[value]
     case 'list':
-      return apply(
-        list,
-        ast.value.map(x => EVAL(x, env)),
-      )
+      return list(...ast.value.map(x => EVAL(x, env)))
     case 'vector':
-      return apply(
-        vector,
-        ast.value.map(x => EVAL(x, env)),
-      )
+      return vector(...ast.value.map(x => EVAL(x, env)))
     case 'hash-map':
-      return apply(
-        hash_map,
-        ast.value.map(x => EVAL(x, env)),
+      return hash_map(
+        ...[].concat(
+          ...[...ast.value.entries()].map(([k, v]) => [k, EVAL(v, env)]),
+        ),
       )
     default:
       return ast
   }
 }
 
-const isList = ast => ast.type === 'list'
-
 const EVAL = (ast, env) => {
   const evaluatedAST = eval_ast(ast, env)
   if (!isList(evaluatedAST)) return evaluatedAST
   if (evaluatedAST.value.length === 0) return ast
   const [efirst, ...rest] = evaluatedAST.value
-  return apply(efirst, rest)
+  return efirst(...rest)
 }
 
-const PRINT = str => pr_str(str)
+const PRINT = str => pr_str(str, true)
 
 const repl_env = {
   '+': (a, b) => a + b,

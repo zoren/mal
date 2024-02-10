@@ -4,7 +4,9 @@ const regex =
   /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g
 
 const tokenize = str =>
-  [...str.matchAll(regex)].map(m => m[1]).filter(s => s.length > 0 && s[0] !== ';')
+  [...str.matchAll(regex)]
+    .map(m => m[1])
+    .filter(s => s.length > 0 && s[0] !== ';')
 
 const read_atom = s => {
   switch (s) {
@@ -31,8 +33,6 @@ const make_reader = tokens => {
     },
   }
 }
-
-export const apply = (f, array) => f.apply(null, array)
 
 const unescapeMap = {
   '"': '"',
@@ -61,11 +61,11 @@ const read_form = reader => {
   reader.next()
   switch (token) {
     case '(':
-      return apply(list, read_list(reader, ')'))
+      return list(...read_list(reader, ')'))
     case '[':
-      return apply(vector, read_list(reader, ']'))
+      return vector(...read_list(reader, ']'))
     case '{':
-      return apply(hash_map, read_list(reader, '}'))
+      return hash_map(...read_list(reader, '}'))
     case ')':
     case '}':
     case ']':
@@ -104,16 +104,17 @@ const read_form = reader => {
 const read_list = (reader, stopChar) => {
   const list = []
   let p
-  while ((p = reader.peek()) !== null && p !== stopChar) {
+  while ((p = reader.peek()) !== stopChar) {
+    if (p === null) throw new Error('reached EOF inside list unbalanced')
     list.push(read_form(reader))
   }
-  if (p === null) throw new Error("expected ')', got EOF")
   reader.next()
   return list
 }
 
 export const read_str = str => {
   const tokens = tokenize(str)
+  if (tokens.length === 0) throw new Error('unexpected EOF while reading')
   const reader = make_reader(tokens)
   return read_form(reader)
 }

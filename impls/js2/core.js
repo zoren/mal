@@ -1,11 +1,12 @@
 import fs from 'node:fs'
 import { pr_str } from './printer.js'
 import { read_str } from './reader.js'
+import { question } from 'readline-sync'
 
 const isPrimitive = v => {
   if (v === null) return true
   const t = typeof v
-  return t === 'number' || t === 'string' || t === 'boolean'
+  return t === 'number' || t === 'string' || t === 'boolean' || t === 'symbol'
 }
 
 const makeRuntimeValue =
@@ -33,6 +34,8 @@ export const isVector = hasTag('vector')
 export const isHashMap = hasTag('hash-map')
 
 export const isClosure = hasTag('closure')
+
+const getFn = fOrC => (isClosure(fOrC) ? fOrC.fn : fOrC)
 
 const isKeyword = ast => typeof ast === 'symbol'
 
@@ -83,7 +86,7 @@ export const keyword = s => (typeof s === 'symbol' ? s : Symbol.for(s))
 
 export class MalError extends Error {
   constructor(value) {
-    super("mal error")
+    super('mal error')
     this.value = value
   }
 }
@@ -94,10 +97,6 @@ export const repl_env = {
   '*': (a, b) => a * b,
   '/': (a, b) => (a / b) | 0,
 
-  prn: v => {
-    console.log(pr_str(v, true))
-    return null
-  },
   list,
   'list?': isList,
   'empty?': a => a.value.length === 0,
@@ -145,10 +144,9 @@ export const repl_env = {
   apply: (f, ...args) => {
     const butLast = args.slice(0, -1)
     const last = args.at(-1)
-    if (isClosure(f)) return f.fn(...butLast, ...last.value)
-    return f(...butLast, ...last.value)
+    return getFn(f)(...butLast, ...last.value)
   },
-  map: (f, l) => list(...l.value.map(v => (isClosure(f) ? f.fn(v) : f(v)))),
+  map: (f, l) => list(...l.value.map(v => (getFn(f)(v)))),
   'nil?': v => v === null,
   'true?': v => v === true,
   'false?': v => v === false,
@@ -178,4 +176,46 @@ export const repl_env = {
   'contains?': (h, k) => h.value.has(k),
   keys: h => list(...h.value.keys()),
   vals: h => list(...h.value.values()),
+
+  'readline': question,
+  '*host-language*': 'js2',
+  'time-ms': () => Date.now(),
+  meta: o => o.meta || null,
+  'with-meta': (o, meta) => {
+    const newO = { ...o, meta }
+    return newO
+  },
+  'fn?': o => {
+    if (typeof o === 'function') return true
+    if (isClosure(o)) return !o.isMacro
+    return false
+  },
+  'macro?': o => {
+    if (typeof o === 'function') return false
+    if (isClosure(o)) return !!o.isMacro
+    return false
+  },
+  'string?': o => typeof o === 'string',
+  'number?': o => typeof o === 'number',
+  seq: coll => {
+    if (typeof coll === 'string')
+      return coll.length === 0 ? null : list(...coll)
+    if (isSeq(coll)) {
+      if (coll.value.length === 0) return null
+      return list(...coll.value)
+    }
+    return null
+  },
+  conj: (o, ...items) => {
+    switch (o.type) {
+      case 'list': {
+        items.reverse()
+        return list(...items, ...o.value)
+      }
+      case 'vector':
+        return vector(...o.value, ...items)
+      default:
+        return null
+    }
+  },
 }

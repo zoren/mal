@@ -6,7 +6,7 @@ const READ = (str) => read_str(str);
 
 const EVAL = (ast) => ast;
 
-const PRINT = (str) => pr_str(str);
+const PRINT = (str) => pr_str(str, true);
 
 const rep = (str) => PRINT(EVAL(READ(str)));
 

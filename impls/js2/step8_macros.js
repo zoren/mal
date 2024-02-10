@@ -1,5 +1,5 @@
 import { Env } from './env.js'
-import { read_str, apply } from './reader.js'
+import { read_str } from './reader.js'
 import { pr_str } from './printer.js'
 import {
   repl_env,
@@ -23,19 +23,14 @@ const eval_ast = (ast, env) => {
     case 'symbol':
       return env.get(value)
     case 'list':
-      return apply(
-        list,
-        ast.value.map(x => EVAL(x, env)),
-      )
+      return list(...ast.value.map(x => EVAL(x, env)))
     case 'vector':
-      return apply(
-        vector,
-        ast.value.map(x => EVAL(x, env)),
-      )
+      return vector(...ast.value.map(x => EVAL(x, env)))
     case 'hash-map':
-      return apply(
-        hash_map,
-        ast.value.map(x => EVAL(x, env)),
+      return hash_map(
+        ...[].concat(
+          ...[...ast.value.entries()].map(([k, v]) => [k, EVAL(v, env)]),
+        ),
       )
     default:
       return ast
@@ -99,7 +94,7 @@ const makeClosureEnv = (params, env) => {
   const ampIndex = params.value.findIndex(p => p.value === '&')
   const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
   const restParam = ampIndex === -1 ? null : params.value[ampIndex + 1]
-  return (args) => {
+  return args => {
     const newEnv = new Env(env)
     for (let i = 0; i < regParamEnd; i++)
       newEnv.set(params.value[i].value, args[i])

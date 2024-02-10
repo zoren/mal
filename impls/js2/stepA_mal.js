@@ -1,4 +1,4 @@
-import { Env, makeClosureEnv } from './env.js'
+import { Env } from './env.js'
 import { read_str } from './reader.js'
 import { pr_str } from './printer.js'
 import {
@@ -11,6 +11,8 @@ import {
   symbol,
   isVector,
   isHashMap,
+  isClosure,
+  MalError,
 } from './core.js'
 
 const READ = str => read_str(str)
@@ -67,17 +69,59 @@ const quasiquote = ast => {
   return ast
 }
 
+const isMacroCall = (ast, env) => {
+  try {
+    if (isList(ast)) {
+      const [a] = ast.value
+      return isSymbol(a) && env.get(a.value)?.isMacro
+    }
+  } catch (e) {
+    return false
+  }
+  return false
+}
+
+const macroExpand = (ast, env) => {
+  while (isMacroCall(ast, env)) {
+    const [a, ...args] = ast.value
+    const macro = env.get(a.value)
+    if (!isClosure(macro)) throw new Error(`${a.value} is not a macro`)
+    ast = macro.fn(...args)
+  }
+  return ast
+}
+
+const makeClosureEnv = (params, env) => {
+  const ampIndex = params.value.findIndex(p => p.value === '&')
+  const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
+  const restParam = ampIndex === -1 ? null : params.value[ampIndex + 1]
+  return args => {
+    const newEnv = new Env(env)
+    for (let i = 0; i < regParamEnd; i++)
+      newEnv.set(params.value[i].value, args[i])
+    if (restParam) newEnv.set(restParam.value, list(...args.slice(regParamEnd)))
+    return newEnv
+  }
+}
+
 const EVAL = (ast, env) => {
   while (true) {
     if (ast === null) return null
     if (!isList(ast)) return eval_ast(ast, env)
     if (ast.value.length === 0) return ast
+    ast = macroExpand(ast, env)
+    if (!isList(ast)) continue
     const [efirst, ...rest] = ast.value
     if (isSymbol(efirst)) {
-      switch (efirst.value) {
-        case 'def!': {
+      const efirstValue = efirst.value
+      switch (efirstValue) {
+        case 'def!':
+        case 'defmacro!': {
           const [symbol, value] = rest
-          const ev = EVAL(value, env)
+          let ev = EVAL(value, env)
+          if (efirstValue === 'defmacro!' && isClosure(ev)) {
+            ev = { ...ev, isMacro: true }
+          }
           env.set(symbol.value, ev)
           return ev
         }
@@ -108,9 +152,9 @@ const EVAL = (ast, env) => {
         }
         case 'fn*': {
           const [params, body] = rest
-          const closureCtor = makeClosureEnv(params)
-          const fn = (...args) => EVAL(body, closureCtor(args, env))
-          return { type: 'closure', ast: body, params, env, fn, closureCtor }
+          const closureCtor = makeClosureEnv(params, env)
+          const fn = (...args) => EVAL(body, closureCtor(args))
+          return { type: 'closure', ast: body, fn, closureCtor }
         }
         case 'quote': {
           return rest[0]
@@ -122,70 +166,78 @@ const EVAL = (ast, env) => {
         case 'quasiquoteexpand': {
           return quasiquote(rest[0])
         }
+        case 'macroexpand': {
+          return macroExpand(rest[0], env)
+        }
+        case 'try*': {
+          const [tryBody, catchForm] = rest
+          if (catchForm === undefined) return EVAL(tryBody, env)
+          const [, exceptionVar, catchBody] = catchForm.value
+          try {
+            return EVAL(tryBody, env)
+          } catch (e) {
+            if (!(e instanceof MalError)) throw e
+            const newEnv = new Env(env)
+            newEnv.set(exceptionVar.value, e.value)
+            return EVAL(catchBody, newEnv)
+          }
+        }
       }
     }
     const f = EVAL(efirst, env)
     const args = rest.map(arg => EVAL(arg, env))
-    if (f.type === 'closure') {
-      ast = f.ast
-      env = f.closureCtor(args, f.env)
-      continue
-    }
-    return f(...args)
+    if (!isClosure(f)) return f(...args)
+    ast = f.ast
+    env = f.closureCtor(args)
   }
 }
 
 const PRINT = str => pr_str(str, true)
 
-const rep = (str, env) => PRINT(EVAL(READ(str), env))
-
-import * as readline from 'node:readline'
-import { stdin as input, nextTick, stdout as output } from 'node:process'
-
 const env = new Env()
+
+const rep = str => PRINT(EVAL(READ(str), env))
 
 for (const [key, value] of Object.entries(repl_env)) env.set(key, value)
 
-rep(`(def! not (fn* (a) (if a false true)))`, env)
+rep(`(def! not (fn* (a) (if a false true)))`)
 
 env.set('eval', ast => EVAL(ast, env))
 env.set('swap!', (a, f, ...args) => {
   const v = a.value
-  const newValue =
-    f.type === 'closure'
-      ? EVAL(f.ast, f.closureCtor([v, ...args], f.env))
-      : f(v, ...args)
+  const newValue = (isClosure(f) ? f.fn : f)(v, ...args)
   a.value = newValue
   return newValue
 })
 
 rep(
   `(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\nnil)\")))))`,
-  env,
+)
+
+rep(
+  '(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list \'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw "odd number of forms to cond")) (cons \'cond (rest (rest xs)))))))',
 )
 
 const commandLineArgs = process.argv.slice(2)
 const [first, ...rest] = commandLineArgs
 env.set('*ARGV*', list(...rest))
 
+import { question } from 'readline-sync'
+
 if (commandLineArgs.length > 0) {
-  rep(`(load-file "${first}")`, env)
+  rep(`(load-file "${first}")`)
 } else {
-  const rl = readline.createInterface({ input, output })
-  const prompt = () => {
-    rl.question(`user> `, line => {
-      if (line === '') {
-        console.log(`Bye!`)
-        rl.close()
-        return
-      }
-      try {
-        console.log(rep(line, env))
-      } catch (e) {
-        console.log(e.message)
-      }
-      nextTick(prompt)
-    })
+  while (true) {
+    const line = question(`user> `)
+    if (line === '') {
+      console.log(`Bye!`)
+      break
+    }
+    try {
+      console.log(rep(line))
+    } catch (e) {
+      if (e instanceof MalError) console.log('error: ' + pr_str(e.value))
+      else console.log(e.message)
+    }
   }
-  prompt()
 }

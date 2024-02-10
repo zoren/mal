@@ -15,5 +15,8 @@
     "semi": false,
     "singleQuote": true,
     "arrowParens": "avoid"
+  },
+  "dependencies": {
+    "readline-sync": "^1.4.10"
   }
 }
