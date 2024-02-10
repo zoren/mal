@@ -117,7 +117,13 @@ export const repl_env = {
     console.log(args.map(a => pr_str(a, false)).join(' '))
     return null
   },
-  'read-string': str => read_str(str),
+  'read-string': str => {
+    try {
+      return read_str(str)
+    } catch (e) {
+      throw new MalError(e.message)
+    }
+  },
   slurp: filepath => fs.readFileSync(filepath, 'utf-8'),
 
   atom: v => ({ type: 'atom', value: v }),
@@ -146,7 +152,7 @@ export const repl_env = {
     const last = args.at(-1)
     return getFn(f)(...butLast, ...last.value)
   },
-  map: (f, l) => list(...l.value.map(v => (getFn(f)(v)))),
+  map: (f, l) => list(...l.value.map(v => getFn(f)(v))),
   'nil?': v => v === null,
   'true?': v => v === true,
   'false?': v => v === false,
@@ -177,11 +183,16 @@ export const repl_env = {
   keys: h => list(...h.value.keys()),
   vals: h => list(...h.value.values()),
 
-  'readline': question,
+  readline: question,
   '*host-language*': 'js2',
   'time-ms': () => Date.now(),
   meta: o => o.meta || null,
   'with-meta': (o, meta) => {
+    if (typeof o === 'function') {
+      const newF = o.bind(null)
+      newF.meta = meta
+      return newF
+    }
     const newO = { ...o, meta }
     return newO
   },

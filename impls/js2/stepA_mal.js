@@ -185,7 +185,10 @@ const EVAL = (ast, env) => {
       }
     }
     const f = EVAL(efirst, env)
-    const args = rest.map(arg => EVAL(arg, env))
+    const args = []
+    for (const arg of rest) {
+      args.push(EVAL(arg, env))
+    }
     if (!isClosure(f)) return f(...args)
     ast = f.ast
     env = f.closureCtor(args)
