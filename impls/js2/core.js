@@ -33,9 +33,8 @@ export const isVector = hasTag('vector')
 
 export const isHashMap = hasTag('hash-map')
 
-export const isClosure = hasTag('closure')
-
-const getFn = fOrC => (isClosure(fOrC) ? fOrC.fn : fOrC)
+export const isClosure = ast =>
+  typeof ast === 'function' && ast.type === 'closure'
 
 const isKeyword = ast => typeof ast === 'symbol'
 
@@ -91,6 +90,12 @@ export class MalError extends Error {
   }
 }
 
+export const cloneFunction = f => {
+  const newF = f.bind(null)
+  for (const key in f) newF[key] = f[key]
+  return newF
+}
+
 export const repl_env = {
   '+': (a, b) => a + b,
   '-': (a, b) => a - b,
@@ -133,6 +138,12 @@ export const repl_env = {
     atom.value = v
     return v
   },
+  'swap!': (a, f, ...args) => {
+    const v = a.value
+    const newValue = f(v, ...args)
+    a.value = newValue
+    return newValue
+  },
 
   cons,
   concat,
@@ -150,9 +161,9 @@ export const repl_env = {
   apply: (f, ...args) => {
     const butLast = args.slice(0, -1)
     const last = args.at(-1)
-    return getFn(f)(...butLast, ...last.value)
+    return f(...butLast, ...last.value)
   },
-  map: (f, l) => list(...l.value.map(v => getFn(f)(v))),
+  map: (f, l) => list(...l.value.map(f)),
   'nil?': v => v === null,
   'true?': v => v === true,
   'false?': v => v === false,
@@ -189,7 +200,7 @@ export const repl_env = {
   meta: o => o.meta || null,
   'with-meta': (o, meta) => {
     if (typeof o === 'function') {
-      const newF = o.bind(null)
+      const newF = cloneFunction(o)
       newF.meta = meta
       return newF
     }
@@ -197,12 +208,10 @@ export const repl_env = {
     return newO
   },
   'fn?': o => {
-    if (typeof o === 'function') return true
-    if (isClosure(o)) return !o.isMacro
+    if (typeof o === 'function') return !o.isMacro
     return false
   },
   'macro?': o => {
-    if (typeof o === 'function') return false
     if (isClosure(o)) return !!o.isMacro
     return false
   },

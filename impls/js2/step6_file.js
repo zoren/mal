@@ -67,20 +67,20 @@ const EVAL = (ast, env) => {
         }
         case 'fn*': {
           const [params, body] = rest
-          const closureCtor = makeClosureEnv(params)
-          const fn = (...args) => EVAL(body, closureCtor(args, env))
-          return { type: 'closure', ast: body, params, env, fn, closureCtor }
+          const closureCtor = makeClosureEnv(params, env)
+          const fn = (...args) => EVAL(body, closureCtor(args))
+          fn.type = 'closure'
+          fn.ast = body
+          fn.closureCtor = closureCtor
+          return fn
         }
       }
     }
     const f = EVAL(efirst, env)
     const args = rest.map(arg => EVAL(arg, env))
-    if (f.type === 'closure') {
-      ast = f.ast
-      env = f.closureCtor(args, f.env)
-      continue
-    }
-    return f(...args)
+    if (f.type !== 'closure') return f(...args)
+    ast = f.ast
+    env = f.closureCtor(args)
   }
 }
 
@@ -98,15 +98,6 @@ for (const [key, value] of Object.entries(repl_env)) env.set(key, value)
 rep(`(def! not (fn* (a) (if a false true)))`, env)
 
 env.set('eval', ast => EVAL(ast, env))
-env.set('swap!', (a, f, ...args) => {
-  const v = a.value
-  const newValue =
-    f.type === 'closure'
-      ? EVAL(f.ast, f.closureCtor([v, ...args], f.env))
-      : f(v, ...args)
-  a.value = newValue
-  return newValue
-})
 
 rep(
   `(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\nnil)\")))))`,

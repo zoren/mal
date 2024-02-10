@@ -1,4 +1,4 @@
-import { Env } from './env.js'
+import { Env, makeClosureEnv } from './env.js'
 import { read_str } from './reader.js'
 import { pr_str } from './printer.js'
 import { repl_env, list, isList, isSymbol, vector, hash_map } from './core.js'
@@ -23,19 +23,6 @@ const eval_ast = (ast, env) => {
       )
     default:
       return ast
-  }
-}
-
-const makeClosureEnv = params => {
-  const ampIndex = params.value.findIndex(p => p.value === '&')
-  const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
-  const restParam = ampIndex === -1 ? null : params.value[ampIndex + 1]
-  return (args, env) => {
-    const newEnv = new Env(env)
-    for (let i = 0; i < regParamEnd; i++)
-      newEnv.set(params.value[i].value, args[i])
-    if (restParam) newEnv.set(restParam.value, list(...args.slice(regParamEnd)))
-    return newEnv
   }
 }
 
@@ -80,21 +67,20 @@ const EVAL = (ast, env) => {
         }
         case 'fn*': {
           const [params, body] = rest
-          const closureCtor = makeClosureEnv(params)
-          const fn = (...args) => EVAL(body, closureCtor(args, env))
-          return { type: 'closure', ast: body, params, env, fn }
+          const closureCtor = makeClosureEnv(params, env)
+          const fn = (...args) => EVAL(body, closureCtor(args))
+          fn.type = 'closure'
+          fn.ast = body
+          fn.closureCtor = closureCtor
+          return fn
         }
       }
     }
     const f = EVAL(efirst, env)
     const args = rest.map(arg => EVAL(arg, env))
-    if (f.type === 'closure') {
-      ast = f.ast
-      const closureCtor = makeClosureEnv(f.params)
-      env = closureCtor(args, f.env)
-      continue
-    }
-    return f(...args)
+    if (f.type !== 'closure') return f(...args)
+    ast = f.ast
+    env = f.closureCtor(args)
   }
 }
 

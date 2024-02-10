@@ -1,4 +1,4 @@
-import { Env } from './env.js'
+import { Env, makeClosureEnv } from './env.js'
 import { read_str } from './reader.js'
 import { pr_str } from './printer.js'
 import {
@@ -11,8 +11,8 @@ import {
   symbol,
   isVector,
   isHashMap,
-  isClosure,
   MalError,
+  cloneFunction,
 } from './core.js'
 
 const READ = str => read_str(str)
@@ -85,23 +85,9 @@ const macroExpand = (ast, env) => {
   while (isMacroCall(ast, env)) {
     const [a, ...args] = ast.value
     const macro = env.get(a.value)
-    if (!isClosure(macro)) throw new Error(`${a.value} is not a macro`)
-    ast = macro.fn(...args)
+    ast = macro(...args)
   }
   return ast
-}
-
-const makeClosureEnv = (params, env) => {
-  const ampIndex = params.value.findIndex(p => p.value === '&')
-  const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
-  const restParam = ampIndex === -1 ? null : params.value[ampIndex + 1]
-  return args => {
-    const newEnv = new Env(env)
-    for (let i = 0; i < regParamEnd; i++)
-      newEnv.set(params.value[i].value, args[i])
-    if (restParam) newEnv.set(restParam.value, list(...args.slice(regParamEnd)))
-    return newEnv
-  }
 }
 
 const EVAL = (ast, env) => {
@@ -119,8 +105,9 @@ const EVAL = (ast, env) => {
         case 'defmacro!': {
           const [symbol, value] = rest
           let ev = EVAL(value, env)
-          if (efirstValue === 'defmacro!' && isClosure(ev)) {
-            ev = { ...ev, isMacro: true }
+          if (efirstValue === 'defmacro!' && typeof ev ==='function') {
+            ev = cloneFunction(ev)
+            ev.isMacro = true
           }
           env.set(symbol.value, ev)
           return ev
@@ -154,7 +141,10 @@ const EVAL = (ast, env) => {
           const [params, body] = rest
           const closureCtor = makeClosureEnv(params, env)
           const fn = (...args) => EVAL(body, closureCtor(args))
-          return { type: 'closure', ast: body, fn, closureCtor }
+          fn.type = 'closure'
+          fn.ast = body
+          fn.closureCtor = closureCtor
+          return fn
         }
         case 'quote': {
           return rest[0]
@@ -189,7 +179,7 @@ const EVAL = (ast, env) => {
     for (const arg of rest) {
       args.push(EVAL(arg, env))
     }
-    if (!isClosure(f)) return f(...args)
+    if (f.type !== 'closure') return f(...args)
     ast = f.ast
     env = f.closureCtor(args)
   }
@@ -206,12 +196,6 @@ for (const [key, value] of Object.entries(repl_env)) env.set(key, value)
 rep(`(def! not (fn* (a) (if a false true)))`)
 
 env.set('eval', ast => EVAL(ast, env))
-env.set('swap!', (a, f, ...args) => {
-  const v = a.value
-  const newValue = (isClosure(f) ? f.fn : f)(v, ...args)
-  a.value = newValue
-  return newValue
-})
 
 rep(
   `(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\nnil)\")))))`,

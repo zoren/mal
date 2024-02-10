@@ -21,11 +21,11 @@ export class Env {
   }
 }
 
-export const makeClosureEnv = params => {
+export const makeClosureEnv = (params, env) => {
   const ampIndex = params.value.findIndex(p => p.value === '&')
   const regParamEnd = ampIndex === -1 ? params.value.length : ampIndex
   const restParam = ampIndex === -1 ? null : params.value[ampIndex + 1]
-  return (args, env) => {
+  return args => {
     const newEnv = new Env(env)
     for (let i = 0; i < regParamEnd; i++)
       newEnv.set(params.value[i].value, args[i])
