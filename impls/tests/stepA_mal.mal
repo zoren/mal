@@ -285,8 +285,8 @@
 (def! start-time (time-ms))
 (= start-time 0)
 ;=>false
-(sumdown 10) ; Waste some time
-;=>55
+(sumdown 100) ; Waste some time
+;=>5050
 (> (time-ms) start-time)
 ;=>true
 
