@@ -190,20 +190,20 @@ const PRINT = str => pr_str(str, true)
 export const makeREP = () => {
   const env = new Env()
 
-  const rep = str => PRINT(EVAL(READ(str), env))
+  env.set('eval', ast => EVAL(ast, env))
 
   for (const [key, value] of Object.entries(repl_env)) env.set(key, value)
 
+  const rep = str => PRINT(EVAL(READ(str), env))
+
   rep(`(def! not (fn* (a) (if a false true)))`)
 
-  env.set('eval', ast => EVAL(ast, env))
-
   rep(
-    `(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\nnil)\")))))`,
+    `(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))`,
   )
 
   rep(
-    '(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list \'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw "odd number of forms to cond")) (cons \'cond (rest (rest xs)))))))',
+    `(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw "odd number of forms to cond")) (cons 'cond (rest (rest xs)))))))`,
   )
 
   return rep
